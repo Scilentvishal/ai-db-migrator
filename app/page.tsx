@@ -1,65 +1,139 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 
 export default function Home() {
+  const [code, setCode] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function migrate() {
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/db-migrator", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await res.json();
+      setResult(data.result);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <div className="inline-flex items-center rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1 text-sm text-cyan-400">
+            AI Powered Migration Tool
+          </div>
+
+          <h1 className="mt-4 text-5xl font-bold">
+            Database Migration Agent
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="mt-4 text-slate-400 max-w-2xl mx-auto">
+            Convert MongoDB, Mongoose, Prisma, PostgreSQL or MySQL code
+            automatically using AI.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Main Grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Input */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur">
+            <div className="border-b border-slate-800 px-6 py-4">
+              <h2 className="font-semibold text-lg">
+                Source Code
+              </h2>
+            </div>
+
+            <div className="p-6">
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Paste your MongoDB or database code here..."
+                className="h-[500px] w-full resize-none rounded-2xl border border-slate-700 bg-slate-950 p-4 text-sm outline-none transition focus:border-cyan-500"
+              />
+
+              <button
+                onClick={migrate}
+                disabled={loading || !code}
+                className="mt-5 flex w-full items-center justify-center rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-black transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                    Migrating...
+                  </>
+                ) : (
+                  "🚀 Start Migration"
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Output */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur">
+            <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+              <h2 className="font-semibold text-lg">
+                AI Generated Output
+              </h2>
+
+              {result && (
+                <button
+                  onClick={() =>
+                    navigator.clipboard.writeText(result)
+                  }
+                  className="rounded-lg border border-slate-700 px-3 py-1 text-sm hover:bg-slate-800"
+                >
+                  Copy
+                </button>
+              )}
+            </div>
+
+            <div className="p-6">
+              <pre className="h-[500px] overflow-auto rounded-2xl border border-slate-700 bg-slate-950 p-4 text-sm text-green-400 whitespace-pre-wrap">
+                {result ||
+                  `AI generated migration code will appear here...`}
+              </pre>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+
+        {/* Features */}
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <h3 className="font-semibold">MongoDB → MySQL</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Convert Mongoose schemas and queries.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <h3 className="font-semibold">Prisma Support</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Generate schema.prisma automatically.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <h3 className="font-semibold">Migration Reports</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Generate downloadable migration summaries.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
